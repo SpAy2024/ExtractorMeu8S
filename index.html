@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>M3U8 Extractor</title>
+    <script>
+        async function extractM3U8(targetUrl) {
+            try {
+                const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+                const res = await fetch(proxyUrl + targetUrl);
+                const html = await res.text();
+                const regex = /https?:\/\/[^"']+\.m3u8[^"']*/g;
+                const matches = html.match(regex);
+                if (matches && matches.length > 0) {
+                    document.body.innerText = matches[0];
+                } else {
+                    document.body.innerText = "No M3U8 found";
+                }
+            } catch (e) {
+                document.body.innerText = "Error: " + e.message;
+            }
+        }
+
+        // Leer ?url=https://sitio.com/embed/xxxx
+        const params = new URLSearchParams(window.location.search);
+        const targetUrl = params.get("url");
+        if (targetUrl) {
+            extractM3U8(targetUrl);
+        } else {
+            document.body.innerText = "No URL provided";
+        }
+    </script>
+</head>
+<body>
+    Buscando .m3u8...
+</body>
+</html>
