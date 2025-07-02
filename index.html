@@ -1,37 +1,41 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>M3U8 Extractor</title>
-    <script>
-        async function extractM3U8(targetUrl) {
-            try {
-                const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
-                const res = await fetch(proxyUrl + targetUrl);
-                const html = await res.text();
-                const regex = /https?:\/\/[^"']+\.m3u8[^"']*/g;
-                const matches = html.match(regex);
-                if (matches && matches.length > 0) {
-                    document.body.innerText = matches[0];
-                } else {
-                    document.body.innerText = "No M3U8 found";
-                }
-            } catch (e) {
-                document.body.innerText = "Error: " + e.message;
-            }
-        }
+  <meta charset="UTF-8" />
+  <title>Extractor M3U8</title>
+  <script>
+    async function extractM3U8(url) {
+      try {
+        const response = await fetch(url);
+        const html = await response.text();
 
-        // Leer ?url=https://sitio.com/embed/xxxx
-        const params = new URLSearchParams(window.location.search);
-        const targetUrl = params.get("url");
-        if (targetUrl) {
-            extractM3U8(targetUrl);
+        const m3u8Regex = /https?:\/\/[^\s"']+\.m3u8[^\s"']*/g;
+        const match = html.match(m3u8Regex);
+
+        if (match && match.length > 0) {
+          // Mostrar solo la primera URL M3U8 encontrada (limpia y sin etiquetas HTML)
+          document.body.innerText = match[0];
         } else {
-            document.body.innerText = "No URL provided";
+          document.body.innerText = "⛔ No se encontró ninguna URL M3U8";
         }
-    </script>
+      } catch (error) {
+        document.body.innerText = "⛔ Error al extraer M3U8: " + error.message;
+      }
+    }
+
+    window.onload = () => {
+      const urlParam = new URLSearchParams(window.location.search).get("url");
+      if (urlParam) {
+        document.body.innerText = "🔎 Analizando...";
+        extractM3U8(urlParam);
+      } else {
+        document.body.innerText = "❗ Debes proporcionar una URL con ?url=";
+      }
+    };
+  </script>
 </head>
 <body>
-    Buscando .m3u8...
+  <p>Cargando extractor M3U8...</p>
 </body>
 </html>
+
