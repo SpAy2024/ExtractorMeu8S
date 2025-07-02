@@ -4,38 +4,75 @@
   <meta charset="UTF-8" />
   <title>Extractor M3U8</title>
   <script>
-    async function extractM3U8(url) {
+    async function extractFromPage(targetUrl) {
       try {
-        const response = await fetch(url);
-        const html = await response.text();
+        // Cargar la página con iframe oculto
+        const iframe = document.createElement("iframe");
+        iframe.style.display = "none";
+        iframe.src = targetUrl;
+        document.body.appendChild(iframe);
 
-        const m3u8Regex = /https?:\/\/[^\s"']+\.m3u8[^\s"']*/g;
-        const match = html.match(m3u8Regex);
+        // Esperar a que el iframe cargue
+        iframe.onload = () => {
+          try {
+            const doc = iframe.contentDocument || iframe.contentWindow.document;
+            const html = doc.documentElement.innerHTML;
 
-        if (match && match.length > 0) {
-          // Mostrar solo la primera URL M3U8 encontrada (limpia y sin etiquetas HTML)
-          document.body.innerText = match[0];
-        } else {
-          document.body.innerText = "⛔ No se encontró ninguna URL M3U8";
-        }
-      } catch (error) {
-        document.body.innerText = "⛔ Error al extraer M3U8: " + error.message;
+            const videoTags = doc.getElementsByTagName("video");
+            for (let video of videoTags) {
+              if (video.src && video.src.includes(".m3u8")) {
+                showResult(video.src);
+                return;
+              }
+            }
+
+            const sourceTags = doc.getElementsByTagName("source");
+            for (let source of sourceTags) {
+              if (source.src && source.src.includes(".m3u8")) {
+                showResult(source.src);
+                return;
+              }
+            }
+
+            const m3u8Regex = /https?:\/\/[^\s"'<>]+\.m3u8[^\s"'<>]*/gi;
+            const matches = html.match(m3u8Regex);
+            if (matches && matches.length > 0) {
+              showResult(matches[0]);
+            } else {
+              showError("⛔ No se encontró ninguna URL M3U8.");
+            }
+          } catch (innerErr) {
+            showError("⚠️ Error accediendo al iframe (posiblemente por CORS).");
+          }
+        };
+      } catch (e) {
+        showError("❌ Error: " + e.message);
       }
     }
 
+    function showResult(url) {
+      document.body.innerText = url;
+    }
+
+    function showError(msg) {
+      document.body.innerText = msg;
+    }
+
+    // Ejecutar al cargar la página
     window.onload = () => {
-      const urlParam = new URLSearchParams(window.location.search).get("url");
-      if (urlParam) {
-        document.body.innerText = "🔎 Analizando...";
-        extractM3U8(urlParam);
+      const url = new URLSearchParams(window.location.search).get("url");
+      if (url) {
+        document.body.innerText = "🔍 Buscando en: " + url;
+        extractFromPage(url);
       } else {
-        document.body.innerText = "❗ Debes proporcionar una URL con ?url=";
+        showError("❗ Agrega ?url= en la URL.");
       }
     };
   </script>
 </head>
 <body>
-  <p>Cargando extractor M3U8...</p>
+  <p>Cargando extractor...</p>
 </body>
 </html>
+
 
